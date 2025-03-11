@@ -29,7 +29,12 @@ public class PdfController {
             file.transferTo(pdfFile);
 
             // Process the PDF
-            pdfEmbeddingService.processPdf(pdfFile);
+            try {
+				pdfEmbeddingService.processPdf(pdfFile);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 
             return ResponseEntity.ok("PDF uploaded and processed successfully.");
         } catch (IOException e) {
