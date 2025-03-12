@@ -16,7 +16,7 @@ public class PdfEmbedding {
 
     private String filename;
 
-    @Column(columnDefinition = "vector(768)") // Example: 1536-dimensional vector
+    @Column(columnDefinition = "vector(768)") // 768-dimensional vector
     private float[] embedding;
 
 	public Long getId() {

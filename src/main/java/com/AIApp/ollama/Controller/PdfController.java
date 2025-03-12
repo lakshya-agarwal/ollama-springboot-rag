@@ -1,14 +1,12 @@
 package com.AIApp.ollama.Controller;
 
 import java.io.File;
-import java.io.IOException;
+import java.util.List;
 
+import com.AIApp.ollama.dto.SimilarDocumentDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.AIApp.ollama.Service.PdfEmbeddingService;
@@ -29,16 +27,21 @@ public class PdfController {
             file.transferTo(pdfFile);
 
             // Process the PDF
-            try {
-				pdfEmbeddingService.processPdf(pdfFile);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+            pdfEmbeddingService.processPdf(pdfFile);
 
-            return ResponseEntity.ok("PDF uploaded and processed successfully.");
-        } catch (IOException e) {
+            return ResponseEntity.ok("PDF uploaded and processed successfully: " + file.getName());
+        } catch (Exception e) {
             return ResponseEntity.status(500).body("Error processing PDF: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/get-similar-documents")
+    public ResponseEntity<Object> retrieveSimilarDocument(@RequestBody SimilarDocumentDTO similarDocumentDTO) {
+        try {
+            List<String> res = pdfEmbeddingService.retrieveSimilarDoc(similarDocumentDTO);
+            return ResponseEntity.ok(res);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
         }
     }
 }

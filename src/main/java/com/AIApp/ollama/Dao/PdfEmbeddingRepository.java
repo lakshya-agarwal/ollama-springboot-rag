@@ -1,14 +1,14 @@
 package com.AIApp.ollama.Dao;
 
-import java.util.List;
-
+import com.AIApp.ollama.Entity.PdfEmbedding;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.query.Param;
 
-import com.AIApp.ollama.Entity.PdfEmbedding;
+import java.util.List;
 
 public interface PdfEmbeddingRepository extends CrudRepository<PdfEmbedding, Long> {
 
-    @Query(value = "SELECT * FROM embeddings ORDER BY embedding <-> CAST(:queryVector AS vector) LIMIT 5", nativeQuery = true)
-    List<PdfEmbedding> findRelevantEmbeddings(float[] queryVector);
+    @Query(value = "SELECT filename FROM embeddings ORDER BY embedding <-> CAST(:queryEmbedding AS vector) ASC LIMIT :retrieveLimit", nativeQuery = true)
+    List<String> findSimilarDocuments(@Param("queryEmbedding") float[] queryEmbedding, @Param("retrieveLimit") Integer retrieveLimit);
 }

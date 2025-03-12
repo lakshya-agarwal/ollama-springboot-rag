@@ -1,14 +1,14 @@
 package com.AIApp.ollama.Service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
+
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @Service
@@ -17,17 +17,16 @@ public class OllamaEmbeddingService {
 
     public List<Float> generateEmbedding(String text) throws Exception {
         HttpClient client = HttpClient.newHttpClient();
-        
-        String jsonBody = "{ \"model\": \"nomic-embed-text\", \"prompt\": \"" + text.replace("\n", "\\n")  + "\" }";
+        String jsonBody = "{ \"model\": \"nomic-embed-text\", \"prompt\": " + new ObjectMapper().writeValueAsString(text) + " }";
 
         HttpRequest request = HttpRequest.newBuilder()
-            .uri(URI.create(OLLAMA_URL))
-            .header("Content-Type", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
-            .build();
+                .uri(URI.create(OLLAMA_URL))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                .build();
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-        
+
         ObjectMapper mapper = new ObjectMapper();
         JsonNode rootNode = mapper.readTree(response.body());
 
@@ -35,6 +34,6 @@ public class OllamaEmbeddingService {
         return StreamSupport.stream(embeddingNode.spliterator(), false)
                 .map(JsonNode::asDouble)
                 .map(Double::floatValue)
-                .collect(Collectors.toList());
+                .toList();
     }
 }
