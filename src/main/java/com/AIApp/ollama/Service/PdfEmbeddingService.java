@@ -20,7 +20,7 @@ public class PdfEmbeddingService {
     private PdfEmbeddingRepository repository;
 
     @Autowired
-    private OllamaEmbeddingService ollamaService;
+    private OllamaService ollamaService;
 
     public void processPdf(File pdfFile) throws Exception {
         PdfExtractorService extractorService = new PdfExtractorService();
@@ -46,7 +46,7 @@ public class PdfEmbeddingService {
     public List<String> retrieveSimilarDoc(SimilarDocumentDTO similarDocumentDTO) throws Exception {
         try {
             float[] queryEmbedding = convertListToArray(ollamaService.generateEmbedding(similarDocumentDTO.getQuery()));
-            return repository.findSimilarDocuments(queryEmbedding, Objects.isNull(similarDocumentDTO.getLimit())? 2 : similarDocumentDTO.getLimit());
+            return repository.findSimilarDocuments(queryEmbedding, Objects.isNull(similarDocumentDTO.getLimit()) ? 2 : similarDocumentDTO.getLimit());
         } catch (Exception e) {
             log.error("Error in query execution: ", e);
             throw e;
