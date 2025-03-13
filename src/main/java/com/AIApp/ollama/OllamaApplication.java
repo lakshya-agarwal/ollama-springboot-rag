@@ -6,8 +6,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class OllamaApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(OllamaApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(OllamaApplication.class, args);
+    }
 
 }

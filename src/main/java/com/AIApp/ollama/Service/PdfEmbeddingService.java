@@ -1,25 +1,28 @@
 package com.AIApp.ollama.Service;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-
+import com.AIApp.ollama.Dao.PdfEmbeddingRepository;
+import com.AIApp.ollama.Entity.PdfEmbedding;
+import com.AIApp.ollama.dto.SimilarDocumentDTO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.AIApp.ollama.Dao.PdfEmbeddingRepository;
-import com.AIApp.ollama.Entity.PdfEmbedding;
+import java.io.File;
+import java.util.List;
+import java.util.Objects;
 
 @Service
 public class PdfEmbeddingService {
-	
-	@Autowired
+
+    private static final Logger log = LoggerFactory.getLogger(PdfEmbeddingService.class);
+    @Autowired
     private PdfEmbeddingRepository repository;
 
     @Autowired
-    private OllamaEmbeddingService ollamaService;
+    private OllamaService ollamaService;
 
-    public void processPdf(File pdfFile) throws IOException, Exception {
+    public void processPdf(File pdfFile) throws Exception {
         PdfExtractorService extractorService = new PdfExtractorService();
         String text = extractorService.extractText(pdfFile);
 
@@ -31,13 +34,23 @@ public class PdfEmbeddingService {
         embedding.setEmbedding(embeddingArray);
         repository.save(embedding);
     }
-    
+
     public static float[] convertListToArray(List<Float> list) {
         float[] array = new float[list.size()];
         for (int i = 0; i < list.size(); i++) {
             array[i] = list.get(i); // Unboxing Float to float
         }
         return array;
+    }
+
+    public List<String> retrieveSimilarDoc(SimilarDocumentDTO similarDocumentDTO) throws Exception {
+        try {
+            float[] queryEmbedding = convertListToArray(ollamaService.generateEmbedding(similarDocumentDTO.getQuery()));
+            return repository.findSimilarDocuments(queryEmbedding, Objects.isNull(similarDocumentDTO.getLimit()) ? 2 : similarDocumentDTO.getLimit());
+        } catch (Exception e) {
+            log.error("Error in query execution: ", e);
+            throw e;
+        }
     }
 
 }
