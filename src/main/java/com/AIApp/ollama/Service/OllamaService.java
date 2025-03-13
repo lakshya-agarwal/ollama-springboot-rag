@@ -1,9 +1,25 @@
 package com.AIApp.ollama.Service;
 
-import com.AIApp.ollama.dto.GenerateRequestDTO;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
+import static com.AIApp.ollama.constants.OllamaConstants.OLLAMA_BASE_URL;
+import static com.AIApp.ollama.constants.OllamaConstants.RESOURCE_PATH_EMBEDDINGS;
+import static com.AIApp.ollama.constants.OllamaConstants.RESOURCE_PATH_GENERATE;
+import static com.AIApp.ollama.constants.OllamaConstants.SUMMARY_MODEL;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.StreamSupport;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -12,22 +28,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.StreamSupport;
+import com.AIApp.ollama.Dao.PdfEmbeddingRepository;
+import com.AIApp.ollama.dto.GenerateRequestDTO;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-import static com.AIApp.ollama.constants.OllamaConstants.*;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
 public class OllamaService {
 
     private final RestTemplate restTemplate;
+    
+    @Autowired
+    private PdfEmbeddingRepository repository;
 
     @Autowired
     public OllamaService(RestTemplate restTemplate) {
@@ -74,5 +89,42 @@ public class OllamaService {
         }
 
         return null;
+    }
+    
+    public String generateChatResponse(String query) throws Exception {
+    	
+    	List<Float> queryEmbeddingList = generateEmbedding(query);
+    	float[] queryEmbeddingArray=PdfEmbeddingService.convertListToArray(queryEmbeddingList);
+    	List<String> relevantDocs = repository.findSimilarDocuments(queryEmbeddingArray, 2);
+    	
+    	StringBuilder context = new StringBuilder();
+        for (String fileName : relevantDocs) {
+            String filePath = System.getProperty("java.io.tmpdir")  + File.separator + fileName;
+            String content = readFileContent(filePath);
+            if (content != null) {
+                context.append(content).append("\n\n");
+            }
+        }
+    	
+    	String prompt = "Use the following document excerpts to answer the question:\n\n" +
+                context.toString() + "\n\nQuestion: " + query;
+    	
+    	return generateSummary(prompt);
+    }
+    
+    private static String readFileContent(String filePath) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(
+                new FileInputStream(filePath), StandardCharsets.UTF_8))) {
+
+            StringBuilder content = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append("\n");
+            }
+            return content.toString();
+        } catch (IOException e) {
+            System.err.println("Failed to read file");
+            return null;
+        }
     }
 }

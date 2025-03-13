@@ -9,5 +9,5 @@ public class OllamaConstants {
     public static final String OLLAMA_BASE_URL = "http://localhost:11434/api";
     public static final String RESOURCE_PATH_EMBEDDINGS = "/embeddings";
     public static final String RESOURCE_PATH_GENERATE = "/generate";
-    public static final String SUMMARY_MODEL = "mistral";
+    public static final String SUMMARY_MODEL = "llama2";
 }
