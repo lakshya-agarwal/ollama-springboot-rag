@@ -9,6 +9,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -20,6 +21,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.StreamSupport;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -95,7 +98,7 @@ public class OllamaService {
     	
     	List<Float> queryEmbeddingList = generateEmbedding(query);
     	float[] queryEmbeddingArray=PdfEmbeddingService.convertListToArray(queryEmbeddingList);
-    	List<String> relevantDocs = repository.findSimilarDocuments(queryEmbeddingArray, 2);
+    	List<String> relevantDocs = repository.findSimilarDocuments(queryEmbeddingArray, 3);
     	
     	StringBuilder context = new StringBuilder();
         for (String fileName : relevantDocs) {
@@ -113,18 +116,12 @@ public class OllamaService {
     }
     
     private static String readFileContent(String filePath) {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(
-                new FileInputStream(filePath), StandardCharsets.UTF_8))) {
-
-            StringBuilder content = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                content.append(line).append("\n");
-            }
-            return content.toString();
-        } catch (IOException e) {
-            System.err.println("Failed to read file");
-            return null;
-        }
+    	 try (PDDocument document = PDDocument.load(new File(filePath))) {
+             PDFTextStripper pdfTextStripper = new PDFTextStripper();
+             return pdfTextStripper.getText(document);
+         } catch (IOException e) {
+             System.err.println("Error reading PDF: " + filePath);
+             return null;
+         }
     }
 }
