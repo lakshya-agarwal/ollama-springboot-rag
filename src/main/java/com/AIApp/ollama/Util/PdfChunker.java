@@ -4,39 +4,36 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PdfChunker {
-
-    private static final int MAX_TOKENS = 300; // Adjust based on LLM limits
+	private static final int TOKEN_LIMIT = 300; // Adjust as needed
 
     public static List<String> chunkText(String text) {
+        String[] sentences = text.split("(?<=[.!?])\\s+"); // Splitting at sentence boundaries
         List<String> chunks = new ArrayList<>();
-        String[] paragraphs = text.split("\n\n"); // Split by paragraphs
-
         StringBuilder currentChunk = new StringBuilder();
-        for (String paragraph : paragraphs) {
-            paragraph = paragraph.trim();
-            
-            // If paragraph is a heading, start a new chunk
-            if (isHeading(paragraph) || currentChunk.length() + paragraph.length() > MAX_TOKENS) {
-                if (currentChunk.length() > 0) {
-                    chunks.add(currentChunk.toString());
-                }
-                currentChunk = new StringBuilder(paragraph);
-            } else {
-                currentChunk.append("\n\n").append(paragraph);
+        int currentTokenCount = 0;
+
+        for (String sentence : sentences) {
+            int tokenCount = countTokens(sentence);
+
+            if (currentTokenCount + tokenCount > TOKEN_LIMIT) {
+                chunks.add(currentChunk.toString().trim());
+                currentChunk = new StringBuilder();
+                currentTokenCount = 0;
             }
+
+            currentChunk.append(sentence).append(" ");
+            currentTokenCount += tokenCount;
         }
 
-        // Add last chunk
-        if (currentChunk.length() > 0) {
-            chunks.add(currentChunk.toString());
+        if (!currentChunk.isEmpty()) {
+            chunks.add(currentChunk.toString().trim());
         }
 
         return chunks;
     }
 
-    // Detect headings like "1. Introduction", "## Title", "CHAPTER 3"
-    private static boolean isHeading(String paragraph) {
-        return paragraph.matches("(?i)^(\\d+\\.\\s+|##\\s+|chapter\\s+\\d+).*");
+    private static int countTokens(String text) {
+        return text.split("\\s+").length; // Count words based on spaces
     }
 
 }

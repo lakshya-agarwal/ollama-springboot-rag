@@ -98,12 +98,11 @@ public class OllamaService {
     	
     	List<Float> queryEmbeddingList = generateEmbedding(query);
     	float[] queryEmbeddingArray=PdfEmbeddingService.convertListToArray(queryEmbeddingList);
-    	List<String> relevantDocs = repository.findSimilarDocuments(queryEmbeddingArray, 3);
+    	List<String> relevantDocs = repository.findRelevantDoc(queryEmbeddingArray, 3);
     	
     	StringBuilder context = new StringBuilder();
-        for (String fileName : relevantDocs) {
-            String filePath = System.getProperty("java.io.tmpdir")  + File.separator + fileName;
-            String content = readFileContent(filePath);
+        for (String content : relevantDocs) {
+           
             if (content != null) {
                 context.append(content).append("\n\n");
             }

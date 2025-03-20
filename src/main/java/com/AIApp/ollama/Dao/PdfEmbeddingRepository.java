@@ -12,6 +12,6 @@ public interface PdfEmbeddingRepository extends CrudRepository<PdfEmbedding, Lon
     @Query(value = "SELECT filename FROM embeddings ORDER BY embedding <-> CAST(:queryEmbedding AS vector) ASC LIMIT :retrieveLimit", nativeQuery = true)
     List<String> findSimilarDocuments(@Param("queryEmbedding") float[] queryEmbedding, @Param("retrieveLimit") Integer retrieveLimit);
     
-    @Query(value = "SELECT * FROM embeddings ORDER BY embedding <-> CAST(:queryEmbedding AS vector) ASC LIMIT :retrieveLimit", nativeQuery = true)
-    List<PdfEmbedding> findRelevantDoc(@Param("queryEmbedding") float[] queryEmbedding, @Param("retrieveLimit") Integer retrieveLimit);
+    @Query(value = "SELECT chunk_text FROM embeddings ORDER BY embedding <-> CAST(:queryEmbedding AS vector) ASC LIMIT :retrieveLimit", nativeQuery = true)
+    List<String> findRelevantDoc(@Param("queryEmbedding") float[] queryEmbedding, @Param("retrieveLimit") Integer retrieveLimit);
 }
